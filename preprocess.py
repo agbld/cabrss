@@ -15,11 +15,11 @@ class Preprocessor():
     #   Init
     # -------------------------------------------------------
     def __init__(self, 
-                 qrels_path, 
+                 query_item_pairs, 
                  network='', 
                  offline_mining_strategy={}, 
                  mining_neg_result_folder=None):
-        self.qrels_path = qrels_path
+        self.qrels_path = query_item_pairs
         self.network = network
         self.offline_mining_strategy = offline_mining_strategy
         self.mining_neg_result_folder = mining_neg_result_folder
@@ -41,7 +41,7 @@ class Preprocessor():
                 neg_df = pd.read_parquet(self.mining_neg_result_folder + '/neg_df.parquet')
             else:
                 neg_num = config.offline_mining_strategy['neg-num']
-                pos_df, neg_df = mining_negative.mine_negative_naive(self.qrels_path, item_id_col='item_id', neg_num=neg_num)
+                pos_df, neg_df = mining_negative.mine_negative_naive(self.qrels_path, neg_num=neg_num, item_id_col='item_id')
         
         if self.network == 'siamese':
             assert False, '\'siamese\' network is no longer supported!! Please use \'triplet\' network instead.'

@@ -16,7 +16,7 @@ device = 'cuda:0'
 pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
 ruten_dataset_folder = '/mnt/share_disk/Datasets/Ruten/'
 experiments_folder = '/mnt/share_disk/Models/cabrss/experiments/'
-pretrained_models_folder = '/mnt/share_disk/Models/cabrss/pretrained_models/'
+pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
 
 # # -------------------------------------------------------
 # #   Trainset
@@ -50,16 +50,24 @@ ruten_product_collection_sm_path = os.path.join(ruten_dataset_folder, 'small_dat
 ruten_qrels_path = os.path.join(ruten_dataset_folder, 'small_dataset/qrels.parquet')
 
 
+
+
+
+
+
+
+
+
+
 # -------------------------------------------------------
 # Ruten ECom-BERT_xbm_batch-hard-loss_train-sm_naive-neg-2_ruten
 # -------------------------------------------------------
-# eval 的設定要另外改
-# testset
-current_test_query_path = ruten_dataset_folder + '/small_dataset/test_query.csv'
-current_product_collection_path = ruten_dataset_folder + '/small_dataset/product_collection_sm.parquet'
-current_qrels_path = ruten_dataset_folder + '/small_dataset/qrels.parquet'
+# trainset
+query_item_pairs_path = ruten_qrels_path #ruten_dataset_folder + '/query_item_pairs.parquet'
+mining_neg_result_folder = None
+
 # exp
-exp_name = 'ECom-BERT_xbm_batch-hard-loss_train-sm_naive-neg-2_ruten'
+exp_name = 'ECom-BERT_wo-xbm_batch-hard-loss_train-sm_naive-neg-2_ruten'
 # network
 network = 'triplet'
 # dataset
@@ -69,14 +77,16 @@ offline_mining_strategy = {
     'neg-num': 2,
 }
 # loss
-loss = 'xbm-batch-hard-triplet-loss'
+loss = 'batch-hard-triplet-loss'
 # training config
 pretrained_model_path = pretrained_models_folder + 'mlm_pre_train_cvc/pc+momo_title+desc/5_epoch/'
 epochs = 10
 batch_size = 64
 evaluation_steps = 200
 save_model_path = experiments_folder + exp_name
+use_amp = False
+save_best_model = False
 # xbm setting
-xbm_enable = True
+xbm_enable = False
 xbm_start_iteration = 0
 xbm_size = batch_size*3

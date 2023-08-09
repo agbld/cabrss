@@ -3,6 +3,9 @@ import pandas as pd
 import config
 
 #%%
+df = pd.read_parquet('/mnt/share_disk/Datasets/Ruten/query_item_pairs.parquet')
+
+#%%
 pos = pd.read_parquet('./pos_df.parquet')
 neg = pd.read_parquet('./neg_df.parquet')
 

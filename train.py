@@ -40,9 +40,10 @@ print('#    * Save model path:', config.save_model_path)
 # -------------------------------------------------------
 # preprocess
 preprocessor = Preprocessor(
-    qrels_path=config.current_qrels_path,
+    query_item_pairs=config.query_item_pairs_path,
     network=config.network,
-    offline_mining_strategy=config.offline_mining_strategy
+    offline_mining_strategy=config.offline_mining_strategy,
+    mining_neg_result_folder=config.mining_neg_result_folder,
 )
 data_train, label_train, margin_train = preprocessor.preprocess()
 print('Training data size:', len(data_train))
@@ -60,7 +61,7 @@ elif config.network == 'triplet-dynamic-margin':
 elif config.network == 'ner-finetune':
     train_examples = [InputExample(texts=data) for data in data_train]
 
-train_loader = DataLoader(train_examples, shuffle=True, batch_size=config.batch_size)
+train_loader = DataLoader(train_examples, shuffle=True, batch_size=config.batch_size) #, num_workers=8, pin_memory=True)
 
 # -------------------------------------------------------
 #   Build evaluator
@@ -106,7 +107,7 @@ pooling_model = models.Pooling(word_embedding_model.get_word_embedding_dimension
 # build model
 model = SentenceTransformerCustom(
     modules=[word_embedding_model, pooling_model],
-    device=None#config.device
+    device=config.device
 )
 
 # define loss
@@ -174,7 +175,6 @@ elif config.loss == 'xbm-batch-all-batch-hard-triplet-loss':
         distance_metric=losses.TripletDistanceMetric.EUCLIDEAN
     )
 
-
 # fit to train
 print('Fit to train ...')
 model.fit(
@@ -184,4 +184,6 @@ model.fit(
     evaluator=evaluator,
     evaluation_steps=config.evaluation_steps,
     output_path=config.save_model_path,
+    use_amp=config.use_amp,
+    save_best_model = config.save_best_model,
 )

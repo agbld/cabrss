@@ -19,6 +19,7 @@ from torch.utils.tensorboard import SummaryWriter
 from transformers import BertTokenizerFast
 import config
 
+from torch.cuda.amp import autocast
 # -------------------------------------------------------
 #   Inherit SentenceTransformer to modify
 # -------------------------------------------------------
@@ -66,8 +67,7 @@ class SentenceTransformerCustom(SentenceTransformer):
         self._model_card_vars['{TRAINING_SECTION}'] = ModelCardTemplate.__TRAINING_SECTION__.replace("{LOSS_FUNCTIONS}", info_loss_functions).replace("{FIT_PARAMETERS}", info_fit_parameters)
 
 
-        if use_amp:
-            from torch.cuda.amp import autocast
+        if use_amp:   # TODO: AMP is not recommended for backward by pytorch official doc.
             scaler = torch.cuda.amp.GradScaler()
 
         self.to(self._target_device)
@@ -153,7 +153,7 @@ class SentenceTransformerCustom(SentenceTransformer):
                     # input('wait')
                     # ##############################02/05
 
-                    if use_amp:
+                    if use_amp:   # TODO: AMP is not recommended for backward by pytorch official doc.
                         with autocast():
                             loss_value = loss_model(features, labels, epoch)
 
