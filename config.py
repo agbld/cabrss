@@ -13,10 +13,17 @@ import os
 # -------------------------------------------------------
 device = 'cuda:0'
 
-pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
-ruten_dataset_folder = '/mnt/share_disk/Datasets/Ruten/'
-experiments_folder = '/mnt/share_disk/Models/cabrss/experiments/'
-pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
+# home
+# pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
+# ruten_dataset_folder = '/mnt/share_disk/Datasets/Ruten/'
+# experiments_folder = '/mnt/share_disk/Models/cabrss/experiments/'
+# pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
+
+# ee303-cw
+pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets' # not in use
+ruten_dataset_folder = '/home/ee303/Documents/agbld/Datasets/Ruten/'
+experiments_folder = '/home/ee303/Documents/agbld/Models/cabrss/experiments/'
+pretrained_models_folder = '/home/ee303/Documents/agbld/Models/pretrained_models/'
 
 # # -------------------------------------------------------
 # #   Trainset
@@ -62,6 +69,11 @@ ruten_qrels_path = os.path.join(ruten_dataset_folder, 'small_dataset/qrels.parqu
 # -------------------------------------------------------
 # Ruten ECom-BERT_xbm_batch-hard-loss_train-sm_naive-neg-2_ruten
 # -------------------------------------------------------
+# test
+current_test_query_path = ruten_test_query_path
+current_product_collection_path = ruten_product_collection_sm_path
+current_qrels_path = ruten_qrels_path
+
 # trainset
 query_item_pairs_path = ruten_qrels_path #ruten_dataset_folder + '/query_item_pairs.parquet'
 mining_neg_result_folder = None
