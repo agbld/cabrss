@@ -186,4 +186,7 @@ model.fit(
     output_path=config.save_model_path,
     use_amp=config.use_amp,
     save_best_model = config.save_best_model,
+    checkpoint_path = config.checkpoint_path,        # TODO:
+    checkpoint_save_steps = config.checkpoint_save_steps,   # TODO:
+    checkpoint_save_total_limit = config.checkpoint_save_total_limit    # TODO:
 )

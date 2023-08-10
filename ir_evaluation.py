@@ -175,7 +175,11 @@ class IREvaluator(SentenceEvaluator):
             # ndcg_at_k_3lv_scores = [scores[self.main_score_function]['3-levels-ndcg@k'][k] for k in self.ndcg_at_k_3lv]
             # mean_score = np.array(ndcg_at_k_3lv_scores).mean()
             # return mean_score
-            return scores[self.main_score_function]['3-levels-ndcg@k'][max(self.ndcg_at_k_3lv)]
+            ndcg_at_k_3lv_score = scores[self.main_score_function]['3-levels-ndcg@k'][max(self.ndcg_at_k_3lv)]
+            precision_at_k_score = scores[self.main_score_function]['precision@k'][max(self.ndcg_at_k_3lv)]
+            recall_at_k_score = scores[self.main_score_function]['recall@k'][max(self.ndcg_at_k_3lv)]
+            return ndcg_at_k_3lv_score, precision_at_k_score, recall_at_k_score
+
 
     def compute_metrices(self, model, corpus_model = None, corpus_embeddings: Tensor = None) -> Dict[str, float]:
         if corpus_model is None:
