@@ -14,22 +14,32 @@ gensim==3.8.3
 # global variables
 device = 'cuda:0'
 
-# machine = 'agbld.host.container.cabrss'
-machine = 'ee303.cw.RTX3090'
+# select machine
+# machine = 'agbld.host'
+machine = 'agbld.host.container.cabrss'
+# machine = 'ee303.cw.RTX3090'
 
+# set root folder paths on different machines
+if machine == 'agbld.host':
+    pchome_datasets_folder = 'E:/share_disk/Datasets/PChome_datasets'
+    ruten_dataset_folder = 'E:/share_disk/Datasets/Ruten/'
+    experiments_folder = 'E:/share_disk/Models/cabrss/experiments/'
+    pretrained_models_folder = 'E:/share_disk/Models/ICL/pretrained_models/'
 if machine == 'agbld.host.container.cabrss':
     pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
     ruten_dataset_folder = '/mnt/share_disk/Datasets/Ruten/'
     experiments_folder = '/mnt/share_disk/Models/cabrss/experiments/'
     pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
-elif machine == 'ee303.cw.RTX3090':
-    pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets' # not in use
+if machine == 'ee303.cw.RTX3090':
+    pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
     ruten_dataset_folder = '/home/ee303/Documents/agbld/Datasets/Ruten/'
     experiments_folder = '/home/ee303/Documents/agbld/Models/cabrss/experiments/'
     pretrained_models_folder = '/home/ee303/Documents/agbld/Models/pretrained_models/'
 
 #%%
 # dataset paths
+# (must inherit the root folder path from the previous block)
+
 # train set
 intent_pos_sm_df_path = pchome_datasets_folder + '/search/pchome_search_click_dataset/train/positive/round1_train_sm_pos.parquet'
 intent_neg_sm_df_path = pchome_datasets_folder + '/search/pchome_search_click_dataset/train/negative/round1_train_sm_neg.parquet'

@@ -25,7 +25,7 @@ from torch.cuda.amp import autocast
 # -------------------------------------------------------
 class SentenceTransformerCustom(SentenceTransformer):
     # create tensorboard for monitoring
-    writer = SummaryWriter(log_dir=os.path.join('./experiments', config.exp_name, 'eval'))
+    writer = SummaryWriter(log_dir=os.path.join(config.experiments_folder, config.exp_name, '.tensorboard'))
     loss_step_log = 0
     metric_step_log = 0
     tokenizer = BertTokenizerFast.from_pretrained(config.pretrained_model_path)
