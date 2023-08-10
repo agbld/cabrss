@@ -215,18 +215,20 @@ class SentenceTransformerCustom(SentenceTransformer):
             os.makedirs(eval_path, exist_ok=True)
 
         if evaluator is not None:
-            score = evaluator(self, output_path=eval_path, epoch=epoch, steps=steps)
+            ndcg_at_k_3lv_score, precision_at_k_score, recall_at_k_score = evaluator(self, output_path=eval_path, epoch=epoch, steps=steps)
             # -------------------------------------------------------
             #   Output score log on tensorboard
             # -------------------------------------------------------
             if steps != -1: 
                 self.metric_step_log += evaluation_steps
-                self.writer.add_scalar('Metric/3-levels-NDCG@50', score, self.metric_step_log)
+                self.writer.add_scalar('Metric/3-levels-NDCG@50', ndcg_at_k_3lv_score, self.metric_step_log)
+                self.writer.add_scalar('Metric/Precision@50', precision_at_k_score, self.metric_step_log)
+                self.writer.add_scalar('Metric/Recall@50', recall_at_k_score, self.metric_step_log)
             # -------------------------------------------------------
             if callback is not None:
-                callback(score, epoch, steps)
-            if score > self.best_score:
-                self.best_score = score
+                callback(ndcg_at_k_3lv_score, epoch, steps)
+            if ndcg_at_k_3lv_score > self.best_score:
+                self.best_score = ndcg_at_k_3lv_score
                 if save_best_model:
                     self.save(output_path)
             

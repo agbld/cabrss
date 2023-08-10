@@ -4,7 +4,7 @@ from typing import Union, Tuple, List, Iterable, Dict
 import torch.nn.functional as F
 from enum import Enum
 from sentence_transformers import SentenceTransformer
-from xbm import triplet_XBM
+from utils.xbm import triplet_XBM
 import config
 
 class TripletDistanceMetric(Enum):
@@ -15,14 +15,12 @@ class TripletDistanceMetric(Enum):
     EUCLIDEAN = lambda x, y: F.pairwise_distance(x, y, p=2)
     MANHATTAN = lambda x, y: F.pairwise_distance(x, y, p=1)
 
-class XbmBatchSoftmaxLoss(nn.Module):
-
+class XbmSoftMarginTripletLoss(nn.Module):
     def __init__(self, model: SentenceTransformer, distance_metric=TripletDistanceMetric.EUCLIDEAN):
-        super(XbmBatchSoftmaxLoss, self).__init__()
+        super(XbmSoftMarginTripletLoss, self).__init__()
         self.model = model
         self.distance_metric = distance_metric
         self.xbm = triplet_XBM(config.xbm_size)
-
 
     def get_config_dict(self):
         distance_metric_name = self.distance_metric.__name__
@@ -30,10 +28,10 @@ class XbmBatchSoftmaxLoss(nn.Module):
             if value == self.distance_metric:
                 distance_metric_name = "TripletDistanceMetric.{}".format(name)
                 break
-
         return {'distance_metric': distance_metric_name}
 
-    def forward(self, sentence_features: Iterable[Dict[str, Tensor]], label: Tensor, epoch):
+    def forward(self, sentence_features: Iterable[Dict[str, Tensor]], labels: Tensor, epoch):
+
         reps = [self.model(sentence_feature)['sentence_embedding'] for sentence_feature in sentence_features]
         current_anchor, current_pos, current_neg = reps
 
@@ -46,22 +44,15 @@ class XbmBatchSoftmaxLoss(nn.Module):
         else:
             rep_anchor = current_anchor
             rep_pos = current_pos
-            rep_neg = current_neg
+            rep_neg = current_neg  
 
-        loss_in_batch = torch.tensor([]).to(config.device)
-        for i, i_rep in enumerate(rep_anchor):
-            # 計算 anchor 跟 in-batch 負樣本（其他人的正樣本）的距離
-            distance_neg = 50 - self.distance_metric(i_rep, rep_pos)
+        distance_pos = self.distance_metric(rep_anchor, rep_pos)
+        distance_neg = self.distance_metric(rep_anchor, rep_neg)
 
-            # 計算 logsoftmax
-            logsoftmax = nn.LogSoftmax(dim=1)
-            output = logsoftmax(distance_neg.unsqueeze(dim=0)) * (-1)
-
-            # 取出正樣本對應的 logsoftmax loss
-            loss = output[0][i].unsqueeze(dim=0)
-            
-            loss_in_batch = torch.cat((loss_in_batch, loss), 0)
+        # losses = F.relu(distance_pos - distance_neg + self.triplet_margin)
+        tl = torch.log1p(torch.exp(distance_pos - distance_neg))
+        soft_margin_triplet_loss = tl.mean()
 
         self.xbm.enqueue_dequeue(current_anchor.detach(), current_pos.detach(), current_neg.detach())
 
-        return loss_in_batch.mean()
+        return soft_margin_triplet_loss

@@ -1,3 +1,9 @@
+# ---------- custom ----------
+# ignore experiments folder
+experiments/
+
+
+# ---------- default ----------
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

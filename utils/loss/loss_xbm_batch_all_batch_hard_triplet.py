@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from enum import Enum
 from sentence_transformers import SentenceTransformer
 import config
-from xbm import triplet_XBM
+from utils.xbm import triplet_XBM
 
 class TripletDistanceMetric(Enum):
     """

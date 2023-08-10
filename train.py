@@ -1,21 +1,23 @@
+import torch
+
 from torch.utils.data import DataLoader
 from sentence_transformers import models, InputExample, losses, util
-import torch
-from preprocess import Preprocessor
-from sentence_transformer_custom import SentenceTransformerCustom
-from ir_evaluation import format_test_collection, IREvaluator
+from utils.preprocess import Preprocessor
+from utils.sentence_transformer_custom import SentenceTransformerCustom
+from utils.ir_evaluation import format_test_collection, IREvaluator
+from utils.loss.loss_soft_margin_triplet_loss import SoftMarginTripletLoss
+from utils.loss.loss_in_batch_softmax import BatchSoftmaxLoss
+from utils.loss.loss_in_batch_triplet import InBatchTripletLoss
+from utils.loss.loss_batch_all_triplet import BatchAllTripletLoss
+from utils.loss.loss_batch_hard_triplet import BatchHardTripletLoss
+from utils.loss.loss_xbm_in_batch_softmax import XbmBatchSoftmaxLoss
+from utils.loss.loss_xbm_in_batch_triplet import XbmInBatchTripletLoss
+from utils.loss.loss_xbm_batch_all_triplet import XbmBatchAllTripletLoss
+from utils.loss.loss_xbm_batch_hard_triplet import XbmBatchHardTripletLoss
+from utils.loss.loss_xbm_soft_margin_triplet import XbmSoftMarginTripletLoss
+from utils.loss.loss_xbm_batch_all_batch_hard_triplet import XbmBatchALLBatchHardTripletLoss
+
 import config
-import loss_soft_margin_triplet_loss
-from loss_in_batch_triplet import InBatchTripletLoss
-from loss_batch_all_triplet import BatchAllTripletLoss
-from loss_batch_hard_triplet import BatchHardTripletLoss
-from loss_xbm_batch_all_triplet import XbmBatchAllTripletLoss
-from loss_xbm_batch_hard_triplet import XbmBatchHardTripletLoss
-from loss_in_batch_softmax import BatchSoftmaxLoss
-from loss_xbm_soft_margin_triplet import XbmSoftMarginTripletLoss
-from loss_xbm_in_batch_triplet import XbmInBatchTripletLoss
-from loss_xbm_in_batch_softmax import XbmBatchSoftmaxLoss
-from loss_xbm_batch_all_batch_hard_triplet import XbmBatchALLBatchHardTripletLoss
 
 torch.manual_seed(2022)
 
@@ -122,7 +124,7 @@ elif config.loss == 'triplet-loss':
         triplet_margin=config.margin
     )
 elif config.loss == 'soft-margin-triplet-loss':
-    train_loss = loss_soft_margin_triplet_loss.SoftMarginTripletLoss(
+    train_loss = SoftMarginTripletLoss(
         model=model,
         distance_metric=losses.TripletDistanceMetric.EUCLIDEAN
     )

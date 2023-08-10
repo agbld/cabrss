@@ -14,17 +14,19 @@ gensim==3.8.3
 # global variables
 device = 'cuda:0'
 
-# machine: agbld.host.container.cabrss
-pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
-ruten_dataset_folder = '/mnt/share_disk/Datasets/Ruten/'
-experiments_folder = '/mnt/share_disk/Models/cabrss/experiments/'
-pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
+# machine = 'agbld.host.container.cabrss'
+machine = 'ee303.cw.RTX3090'
 
-# machine: ee303.cw.RTX3090
-# pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets' # not in use
-# ruten_dataset_folder = '/home/ee303/Documents/agbld/Datasets/Ruten/'
-# experiments_folder = '/home/ee303/Documents/agbld/Models/cabrss/experiments/'
-# pretrained_models_folder = '/home/ee303/Documents/agbld/Models/pretrained_models/'
+if machine == 'agbld.host.container.cabrss':
+    pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets'
+    ruten_dataset_folder = '/mnt/share_disk/Datasets/Ruten/'
+    experiments_folder = '/mnt/share_disk/Models/cabrss/experiments/'
+    pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
+elif machine == 'ee303.cw.RTX3090':
+    pchome_datasets_folder = '/mnt/share_disk/Datasets/PChome_datasets' # not in use
+    ruten_dataset_folder = '/home/ee303/Documents/agbld/Datasets/Ruten/'
+    experiments_folder = '/home/ee303/Documents/agbld/Models/cabrss/experiments/'
+    pretrained_models_folder = '/home/ee303/Documents/agbld/Models/pretrained_models/'
 
 #%%
 # dataset paths
@@ -51,43 +53,53 @@ ruten_product_collection_sm_path = os.path.join(ruten_dataset_folder, 'small_dat
 ruten_qrels_path = os.path.join(ruten_dataset_folder, 'small_dataset/qrels.parquet')
 
 #%%
-# run configs
+# configs
 
-# -----------------------------------------------------------------------------------------------------------------------
 exp_name = 'ECom-BERT_wo-xbm_batch-hard-loss_train-sm_naive-neg-2_ruten'
-# test dataset
-current_test_query_path = ruten_test_query_path
-current_product_collection_path = ruten_product_collection_sm_path
-current_qrels_path = ruten_qrels_path
-# train dataset
-query_item_pairs_path = ruten_qrels_path #ruten_dataset_folder + '/query_item_pairs.parquet'
-mining_neg_result_folder = None
-# valid dataset
-# TODO: build valid dataset
-# network
-network = 'triplet'
-# dataset
-offline_mining_strategy = {
-    'mine-neg-strategy': 'naive',
-    'neg-num': 2,
-}
-# training config
-pretrained_model_path = pretrained_models_folder + 'mlm_pre_train_cvc/pc+momo_title+desc/5_epoch/'
-loss = 'batch-hard-triplet-loss'
-epochs = 10
-batch_size = 64
-# acceleration
-use_amp = True
-# xbm setting
-xbm_enable = False
-xbm_start_iteration = 0
-xbm_size = batch_size*3
-# eval & save
-evaluation_steps = 200
-save_model_path = experiments_folder + exp_name # which is SentenceTransformer(output_path: str)
-save_best_model = True # for reference only, its currently using the evaluation dataset to pick the best model
-checkpoint_path = save_model_path + '/checkpoint'
-checkpoint_save_steps = 1000    # save checkpoint every 1000 steps
-checkpoint_save_total_limit = 10    # keep only the last 10 checkpoints
+is_test_run = True
+
+if exp_name == 'ECom-BERT_wo-xbm_batch-hard-loss_train-sm_naive-neg-2_ruten':
+    # test dataset  
+    current_test_query_path = ruten_test_query_path
+    current_product_collection_path = ruten_product_collection_sm_path
+    current_qrels_path = ruten_qrels_path
+    # train dataset
+    query_item_pairs_path = ruten_dataset_folder + '/query_item_pairs.parquet'
+    mining_neg_result_folder = None
+    # valid dataset
+    # TODO: build valid dataset
+    # network
+    network = 'triplet'
+    # dataset
+    offline_mining_strategy = {
+        'mine-neg-strategy': 'naive',
+        'neg-num': 2,
+    }
+    # training config                               
+    pretrained_model_path = pretrained_models_folder + 'mlm_pre_train_cvc/pc+momo_title+desc/5_epoch/'
+    loss = 'batch-hard-triplet-loss'
+    epochs = 10
+    batch_size = 64
+    # acceleration
+    use_amp = True
+    # xbm setting
+    xbm_enable = False
+    xbm_start_iteration = 0
+    xbm_size = batch_size*3
+    # eval & save
+    evaluation_steps = 200
+    save_model_path = experiments_folder + exp_name # which is SentenceTransformer(output_path: str)
+    save_best_model = True # for reference only, its currently using the evaluation dataset to pick the best model
+    checkpoint_path = save_model_path + '/checkpoint'
+    checkpoint_save_steps = 1000    # save checkpoint every 1000 steps
+    checkpoint_save_total_limit = 10    # keep only the last 10 checkpoints
+
+    if is_test_run:
+        query_item_pairs_path = ruten_qrels_path
+        epochs = 5
+        batch_size = 4
+        evaluation_steps = 10
+        checkpoint_save_steps = 5
+        checkpoint_save_total_limit = 2
 
 #%%
