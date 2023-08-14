@@ -16,11 +16,9 @@ class Preprocessor():
     # -------------------------------------------------------
     def __init__(self, 
                  query_item_pairs, 
-                 network='', 
                  offline_mining_strategy={}, 
                  mining_neg_result_folder=None):
         self.qrels_path = query_item_pairs
-        self.network = network
         self.offline_mining_strategy = offline_mining_strategy
         self.mining_neg_result_folder = mining_neg_result_folder
 
@@ -35,29 +33,20 @@ class Preprocessor():
         # -------------------------------------------------------
         #   Negative data mining strategy
         # -------------------------------------------------------
+        
+        # 'naive' is the only way to mine pos/neg on-the-fly
         if self.offline_mining_strategy['mine-neg-strategy'] == 'naive': 
-            if self.mining_neg_result_folder is not None:
+            if self.mining_neg_result_folder is not None and os.path.exists(self.mining_neg_result_folder):
                 pos_df = pd.read_parquet(self.mining_neg_result_folder + '/pos_df.parquet')
                 neg_df = pd.read_parquet(self.mining_neg_result_folder + '/neg_df.parquet')
             else:
                 neg_num = config.offline_mining_strategy['neg-num']
-                pos_df, neg_df = mining_negative.mine_negative_naive(self.qrels_path, neg_num=neg_num, item_id_col='item_id')
-        
-        if self.network == 'siamese':
-            assert False, '\'siamese\' network is no longer supported!! Please use \'triplet\' network instead.'
-            print('Format siamese training set ...')
-            train_df = pd.concat([pos_df, neg_df])
-            train_df = train_df.sample(frac=1, random_state=2022).reset_index(drop=True)
-            data = []
-            labels = []
-            for q, n, l in tqdm(zip(train_df['query'], train_df['name'], train_df['label'])):
-                data.append([q, n])
-                labels.append(l)
-            return data, labels
+                pos_df, neg_df = mining_negative.mine_negative_naive(self.qrels_path, neg_num=neg_num)#, item_id_col='item_id')
 
-        elif self.network == 'triplet':
-            print('Format triplet training set ...')
-
+                if os.path.exists(self.mining_neg_result_folder) == False: os.makedirs(self.mining_neg_result_folder)
+                pos_df.to_parquet(self.mining_neg_result_folder + '/pos_df.parquet')
+                neg_df.to_parquet(self.mining_neg_result_folder + '/neg_df.parquet')
+                
             pos_df = pos_df[['query_id', 'query', 'name']]
             pos_df = pos_df.rename({'query': 'anchor', 'name': 'pos'}, axis=1)
             neg_df = neg_df[['query_id', 'query', 'name']]
@@ -70,6 +59,46 @@ class Preprocessor():
             # shuffle
             train_df = train_df.sample(frac=1, random_state=2022).reset_index(drop=True)
 
+            # format data
+            data = []
+            for a, p, n in tqdm(zip(train_df['anchor'], train_df['pos'], train_df['neg'])):
+                data.append([a, p, n])
+            return data, None, None
+
+        elif self.offline_mining_strategy['mine-neg-strategy'] == 'train-sm-clean_intent-based-book-neg-2':
+            if self.mining_neg_result_folder is not None and os.path.exists(self.mining_neg_result_folder):
+                pos_df = pd.read_parquet(self.mining_neg_result_folder + '/pos_df.parquet')
+                neg_df = pd.read_parquet(self.mining_neg_result_folder + '/neg_df.parquet')
+            else:
+                pos_df, neg_df = mining_negative.mine_negative_intent_based(self.qrels_path)
+
+                if os.path.exists(self.mining_neg_result_folder) == False: os.makedirs(self.mining_neg_result_folder)
+                pos_df.to_parquet(self.mining_neg_result_folder + '/pos_df.parquet')
+                neg_df.to_parquet(self.mining_neg_result_folder + '/neg_df.parquet')
+                
+            pos_df = pos_df[['query_id', 'query', 'name']]
+            pos_df = pos_df.rename({'query': 'anchor', 'name': 'pos'}, axis=1)
+            neg_df = neg_df[['query_id', 'query', 'name']]
+            neg_df = neg_df.rename({'query': 'anchor','name': 'neg'}, axis=1)
+            train_df = pos_df.merge(neg_df, on=['query_id','anchor'], how='inner')
+            train_df = train_df[['anchor', 'pos', 'neg']]
+
+            print('number of training data :', len(train_df))
+
+            # shuffle
+            train_df = train_df.sample(frac=1, random_state=2022).reset_index(drop=True)
+
+            # format data
+            data = []
+            for a, p, n in tqdm(zip(train_df['anchor'], train_df['pos'], train_df['neg'])):
+                data.append([a, p, n])
+            return data, None, None
+
+
+
+
+
+            train_df = pd.read_parquet(os.path.join(config.pchome_datasets_folder, 'train', 'round1_train.sm.clean_intent_based_book_neg_2.parquet'))
             # format data
             data = []
             for a, p, n in tqdm(zip(train_df['anchor'], train_df['pos'], train_df['neg'])):

@@ -19,7 +19,6 @@ from torch.utils.tensorboard import SummaryWriter
 from transformers import BertTokenizerFast
 import config
 
-from torch.cuda.amp import autocast
 # -------------------------------------------------------
 #   Inherit SentenceTransformer to modify
 # -------------------------------------------------------
@@ -28,7 +27,7 @@ class SentenceTransformerCustom(SentenceTransformer):
     writer = SummaryWriter(log_dir=os.path.join(config.experiments_folder, config.exp_name, '.tensorboard'))
     loss_step_log = 0
     metric_step_log = 0
-    tokenizer = BertTokenizerFast.from_pretrained(config.pretrained_model_path)
+    # tokenizer = BertTokenizerFast.from_pretrained(config.pretrained_model_path)
 
     # -------------------------------------------------------
     #   Modify fit function
@@ -48,6 +47,7 @@ class SentenceTransformerCustom(SentenceTransformer):
             save_best_model: bool = True,
             max_grad_norm: float = 1,
             use_amp: bool = False,
+            use_fp16: bool = False,
             callback: Callable[[float, int, int], None] = None,
             show_progress_bar: bool = True,
             checkpoint_path: str = None,
@@ -68,7 +68,11 @@ class SentenceTransformerCustom(SentenceTransformer):
 
 
         if use_amp:   # TODO: AMP is not recommended for backward by pytorch official doc.
+            from torch.cuda.amp import autocast
             scaler = torch.cuda.amp.GradScaler()
+
+        if use_fp16:
+            self.half()
 
         self.to(self._target_device)
 
@@ -76,15 +80,6 @@ class SentenceTransformerCustom(SentenceTransformer):
 
         for dataloader in dataloaders:
             dataloader.collate_fn = self.smart_batching_collate
-        # -------------------------------------------------------
-        #   Modify collate function if using ner augmentation
-        # -------------------------------------------------------
-        # for dataloader in dataloaders:
-        #     # use ner collate function
-        #     if config.ner_augment: dataloader.collate_fn = self.ner_collate_fn
-        #     # use smart batching (original)
-        #     else: dataloader.collate_fn = self.smart_batching_collate
-        # -------------------------------------------------------
 
         loss_models = [loss for _, loss in train_objectives]
         for loss_model in loss_models:
@@ -143,15 +138,6 @@ class SentenceTransformerCustom(SentenceTransformer):
                         data = next(data_iterator)
                         
                     features, labels = data
-                    # ##############################02/05 用於 ner 與 semantic 的特徵混合
-                    # print("len(features): ", len(features))
-                    # print("len(features)[0]: ", len(features[0]))
-                    # print("features[0]: ", features[0]['input_ids'].shape)
-                    # print("features[0]: ", features[0])
-                    # # print("features[1]: ", features[1])
-                    # # print("features[2]: ", features[2])
-                    # input('wait')
-                    # ##############################02/05
 
                     if use_amp:   # TODO: AMP is not recommended for backward by pytorch official doc.
                         with autocast():
@@ -165,6 +151,11 @@ class SentenceTransformerCustom(SentenceTransformer):
                         scaler.update()
 
                         skip_scheduler = scaler.get_scale() != scale_before_step
+                    elif use_fp16:
+                        loss_value = loss_model(features, labels, epoch)
+                        loss_value.backward()
+                        torch.nn.utils.clip_grad_norm_(loss_model.parameters(), max_grad_norm)
+                        optimizer.step()
                     else:
                         loss_value = loss_model(features, labels, epoch)
                         loss_value.backward()

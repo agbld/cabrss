@@ -24,48 +24,18 @@ def mine_negative_naive(pos_path, query_col='query', item_col='name', query_id_c
     sample_pool = list(name_id_map.keys())
 
     neg_df = []
-    for r in tqdm(pos_df.iloc):
-        query_id = r[query_id_col]
-        query = r[query_col]
-        name_id = r[item_id_col]
-        sample_pool = list(name_id_map.keys())
-        sampled_indices = random.sample(list(name_id_map.keys()), neg_num)
-        while name_id in sampled_indices: sampled_indices = random.sample(sample_pool, neg_num)
-        for i in sampled_indices:
-            neg_df.append({query_id_col: query_id, query_col: query, item_col: name_id_map[i]})
-    neg_df = pd.DataFrame(neg_df)
-
-    # add label
-    pos_df['label'] = 1.0
-    neg_df['label'] = 0.0
-
-    return pos_df, neg_df
-
-# -------------------------------------------------------
-#   Mine negative data basic (from same sign_id)
-# -------------------------------------------------------
-def mine_negative_basic(pos_path):
-    print('Mine negative data basic ...')
-
-    # load positive dataframe
-    pos_df = pd.read_parquet(pos_path)
-    pos_df['query_id'] = pos_df.index
-    pos_df = pos_df[['query_id', 'query', 'name', 'sign_id']]
-    
-    # create sign id to indices map for sampling
-    sign_id_indices = {s: list(df.index) for s, df in pos_df.groupby('sign_id')}
-
-    # random sample same sign_id name
-    neg_df = []
-    for c_i, (query_id, query, sign_id) in tqdm(enumerate(zip(pos_df['query_id'], pos_df['query'], pos_df['sign_id']))):
-        sampled_indices = random.sample(sign_id_indices[sign_id], neg_num)
-        # re-sample while c_i is in sampled indices
-        while c_i in sampled_indices:
-            sampled_indices = random.sample(sign_id_indices[sign_id], neg_num)
-        # store neg
-        for i in sampled_indices:
-            neg_df.append({'query_id': query_id, 'query': query, 'name': pos_df.loc[i,'name'], 'sign_id': pos_df.loc[i,'sign_id']})
-    neg_df = pd.DataFrame(neg_df)
+    with tqdm(total=len(pos_df)) as pbar:
+        for r in pos_df.iloc:
+            query_id = r[query_id_col]
+            query = r[query_col]
+            name_id = r[item_id_col]
+            sample_pool = list(name_id_map.keys())
+            sampled_indices = random.sample(list(name_id_map.keys()), neg_num)
+            while name_id in sampled_indices: sampled_indices = random.sample(sample_pool, neg_num)
+            for i in sampled_indices:
+                neg_df.append({query_id_col: query_id, query_col: query, item_col: name_id_map[i]})
+            pbar.update(1)
+        neg_df = pd.DataFrame(neg_df)
 
     # add label
     pos_df['label'] = 1.0
@@ -123,7 +93,11 @@ def mine_negative_intent_based(pos_path):
 
         # middle negative: sample from same region group
         sample_pool = same_region_group_map[rg_no_group].copy()
-        sample_pool.remove(name_id)
+        try:
+            sample_pool.remove(name_id)
+        except:
+            print('\nsample_pool\n', sample_pool, '\nname_id\n', name_id)
+            input()
         sampled_name_id = random.sample(sample_pool, k=1)[0]
         neg_df.append({'query_id': query_id, 'query': query, 'name': name_id_map[sampled_name_id]})
 
@@ -144,7 +118,6 @@ def mine_negative_intent_based(pos_path):
     pos_df['label'] = 1.0
     neg_df['label'] = 0.0
     return pos_df, neg_df
-
 
 if __name__ == '__main__':
     neg_num = config.offline_mining_strategy['neg-num']

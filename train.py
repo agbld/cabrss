@@ -1,3 +1,4 @@
+#%%
 import torch
 
 from torch.utils.data import DataLoader
@@ -29,7 +30,6 @@ print('# Dataset:')
 print('#    * Data Mining strategy:', config.offline_mining_strategy)
 print('# Training settings:')
 print('#    * Device:', config.device)
-print('#    * Training network:', config.network)
 print('#    * Pretrained model path:', config.pretrained_model_path)
 print('#    * Training loss:', config.loss)
 if config.loss == 'triplet-loss': print('#    * Margin:', config.margin)
@@ -40,10 +40,8 @@ print('#    * Save model path:', config.save_model_path)
 # -------------------------------------------------------
 #   Load data
 # -------------------------------------------------------
-# preprocess
 preprocessor = Preprocessor(
     query_item_pairs=config.query_item_pairs_path,
-    network=config.network,
     offline_mining_strategy=config.offline_mining_strategy,
     mining_neg_result_folder=config.mining_neg_result_folder,
 )
@@ -53,16 +51,7 @@ print('Training data size:', len(data_train))
 # -------------------------------------------------------
 #   Build dataloader
 # -------------------------------------------------------
-# train loader
-if config.network == 'siamese':
-    train_examples = [InputExample(texts=data, label=int(label)) for data, label in zip(data_train, label_train)]
-elif config.network == 'triplet':
-    train_examples = [InputExample(texts=data) for data in data_train]
-elif config.network == 'triplet-dynamic-margin':
-    train_examples = [InputExample(texts=data, label=float(margin)) for data, margin in zip(data_train, margin_train)]
-elif config.network == 'ner-finetune':
-    train_examples = [InputExample(texts=data) for data in data_train]
-
+train_examples = [InputExample(texts=data) for data in data_train]
 train_loader = DataLoader(train_examples, shuffle=True, batch_size=config.batch_size) #, num_workers=8, pin_memory=True)
 
 # -------------------------------------------------------
@@ -70,9 +59,9 @@ train_loader = DataLoader(train_examples, shuffle=True, batch_size=config.batch_
 # -------------------------------------------------------
 # init test collection
 queries, product_collection, qrels_df, qrels_binary = format_test_collection(
-    test_query_path=config.current_test_query_path,
-    product_collection_path=config.current_product_collection_path,
-    qrels_path=config.current_qrels_path,
+    test_query_path=config.valid_query_path,
+    product_collection_path=config.valid_product_collection_path,
+    qrels_path=config.valid_qrels_path,
 )
 
 # init evaluator
@@ -161,6 +150,12 @@ elif config.loss == 'batch-hard-triplet-loss':
         model=model,
         distance_metric=losses.TripletDistanceMetric.EUCLIDEAN
     )
+elif config.loss == 'batch-hard-triplet-loss-ST':   # ST: SentenceTransformer Official Implementation
+    from sentence_transformers.losses import TripletLoss
+    train_loss = BatchHardTripletLoss(
+        model=model,
+        distance_metric=losses.TripletDistanceMetric.EUCLIDEAN
+    )
 elif config.loss == 'xbm-batch-hard-triplet-loss':
     train_loss = XbmBatchHardTripletLoss(
         model=model,
@@ -176,7 +171,7 @@ elif config.loss == 'xbm-batch-all-batch-hard-triplet-loss':
         model=model,
         distance_metric=losses.TripletDistanceMetric.EUCLIDEAN
     )
-
+#%%
 # fit to train
 print('Fit to train ...')
 model.fit(
@@ -187,8 +182,11 @@ model.fit(
     evaluation_steps=config.evaluation_steps,
     output_path=config.save_model_path,
     use_amp=config.use_amp,
+    use_fp16=config.use_fp16,
     save_best_model = config.save_best_model,
-    checkpoint_path = config.checkpoint_path,        # TODO:
-    checkpoint_save_steps = config.checkpoint_save_steps,   # TODO:
-    checkpoint_save_total_limit = config.checkpoint_save_total_limit    # TODO:
+    checkpoint_path = config.checkpoint_path,
+    checkpoint_save_steps = config.checkpoint_save_steps,
+    checkpoint_save_total_limit = config.checkpoint_save_total_limit 
 )
+
+#%%
