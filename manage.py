@@ -25,6 +25,9 @@ if args.cmd == 'ls':
         if experiment != '.old':
             print(experiment)
     if args.all:
+        if '.old' not in experiments:
+            print('No experiments under .old/.')
+            exit(0)
         experiments_old = os.listdir(os.path.join(config.experiments_folder, '.old'))
         for experiment in experiments_old:
             print(experiment)
