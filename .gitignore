@@ -1,6 +1,7 @@
 # ---------- custom ----------
 # ignore experiments folder
 experiments/
+legacy/
 
 
 # ---------- default ----------

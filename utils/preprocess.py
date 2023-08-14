@@ -34,7 +34,6 @@ class Preprocessor():
         #   Negative data mining strategy
         # -------------------------------------------------------
         
-        # 'naive' is the only way to mine pos/neg on-the-fly
         if self.offline_mining_strategy['mine-neg-strategy'] == 'naive': 
             if self.mining_neg_result_folder is not None and os.path.exists(self.mining_neg_result_folder):
                 pos_df = pd.read_parquet(self.mining_neg_result_folder + '/pos_df.parquet')
@@ -88,17 +87,6 @@ class Preprocessor():
             # shuffle
             train_df = train_df.sample(frac=1, random_state=2022).reset_index(drop=True)
 
-            # format data
-            data = []
-            for a, p, n in tqdm(zip(train_df['anchor'], train_df['pos'], train_df['neg'])):
-                data.append([a, p, n])
-            return data, None, None
-
-
-
-
-
-            train_df = pd.read_parquet(os.path.join(config.pchome_datasets_folder, 'train', 'round1_train.sm.clean_intent_based_book_neg_2.parquet'))
             # format data
             data = []
             for a, p, n in tqdm(zip(train_df['anchor'], train_df['pos'], train_df['neg'])):

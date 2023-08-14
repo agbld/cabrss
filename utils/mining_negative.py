@@ -118,16 +118,3 @@ def mine_negative_intent_based(pos_path):
     pos_df['label'] = 1.0
     neg_df['label'] = 0.0
     return pos_df, neg_df
-
-if __name__ == '__main__':
-    neg_num = config.offline_mining_strategy['neg-num']
-    # pos_path = config.pchome_datasets_folder + '/search/pchome_search_click_dataset/train/positive/round1_train_sm_pos.parquet'
-    pos_path = os.path.join(config.ruten_dataset_folder, 'query_item_pairs.parquet')
-
-    # negative mineing method
-    pos_df, neg_df = mine_negative_naive(pos_path)
-    # pos_df, neg_df = mine_negative_basic(pos_path)
-    # pos_df, neg_df = mine_negative_intent_based(pos_path)
-
-    pos_df.to_parquet('./pos_df.parquet')
-    neg_df.to_parquet('./neg_df.parquet')

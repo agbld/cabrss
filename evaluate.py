@@ -20,7 +20,6 @@ def evaluate(test_query_path, product_collection_path, qrels_path, test_collecti
     #   Init
     # -------------------------------------------------------
     # init test collection
-    # queries, product_collection, qrels_df, qrels_binary_strict, qrels_binary_loose = format_test_collection(
     queries, product_collection, qrels_df, qrels_binary_strict = format_test_collection(
         test_query_path=test_query_path,
         product_collection_path=product_collection_path,
@@ -141,28 +140,9 @@ def evaluate(test_query_path, product_collection_path, qrels_path, test_collecti
 if __name__ == '__main__':
     # evaluate on different testing set
     test_collection = ['round0-plus', 'round1']
-    # test_collection = ['ruten_small_collection']
-    # test_collection = ['round0-original_round0-collection']
 
     for test_collection_name in test_collection:
-        # 命名規則: qrels name + collection name
-        # if test_collection_name == 'round0_plus_qrels_only_r0_id_round0-collection':
-        #     test_query_path=config.round0_test_query_path
-        #     product_collection_path=config.round0_product_collection_sm_path
-        #     qrels_path=config.round0_plus_qrels_only_r0_id
-        # if test_collection_name == 'round0-original_round0-collection':
-        #     test_query_path=config.round0_test_query_path
-        #     product_collection_path=config.round0_product_collection_sm_path
-        #     qrels_path=config.round0_qrels_path
-        # if test_collection_name == 'round0-plus_round0-collection':
-        #     test_query_path=config.round0_test_query_path
-        #     product_collection_path=config.round0_product_collection_sm_path
-        #     qrels_path=config.round0_plus_qrels_path
-        # if test_collection_name == 'round0-plus_round0-plus-collection':
-        #     test_query_path=config.round0_test_query_path
-        #     product_collection_path=config.round0_plus_product_collection_sm_path
-        #     qrels_path=config.round0_plus_qrels_path
-        if test_collection_name == 'round0-plus': # 同'round0-plus_round0-plus-collection'
+        if test_collection_name == 'round0-plus':
             test_query_path=config.round0_plus_test_query_path
             product_collection_path=config.round0_plus_product_collection_sm_path
             qrels_path=config.round0_plus_qrels_path
@@ -170,9 +150,5 @@ if __name__ == '__main__':
             test_query_path=config.round1_test_query_path
             product_collection_path=config.round1_product_collection_sm_path
             qrels_path=config.round1_qrels_path
-        # elif test_collection_name == 'ruten_small_collection':
-        #     test_query_path=config.ruten_test_query_path
-        #     product_collection_path=config.ruten_product_collection_sm_path
-        #     qrels_path=config.ruten_qrels_path
         print("evaluate on test collection - {}".format(test_collection_name))
         evaluate(test_query_path, product_collection_path, qrels_path, test_collection_name)
