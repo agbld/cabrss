@@ -2,7 +2,7 @@ from tqdm import tqdm
 import random
 import pandas as pd
 import config
-import mining_negative
+import utils.mining_negative as mining_negative
 import os
 
 random.seed(2022)

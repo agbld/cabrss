@@ -64,21 +64,40 @@ def evaluate(test_query_path, product_collection_path, qrels_path, test_collecti
     # get test query embeddings
     test_query_df = pd.read_csv(test_query_path, index_col=None)
     query_sentences = test_query_df['query'].to_list()
-    query_embeddings = model.encode(
-        sentences=query_sentences,
-        batch_size=batch_size,
-        normalize_embeddings=True,
-    )
+    if config.use_amp:
+        from torch.cuda.amp import autocast
+        with autocast():
+            query_embeddings = model.encode(
+                sentences=query_sentences,
+                batch_size=batch_size,
+                normalize_embeddings=True,
+            )
+    else:
+        query_embeddings = model.encode(
+            sentences=query_sentences,
+            batch_size=batch_size,
+            normalize_embeddings=True,
+        )
 
     # get product embeddings
     product_collection_sm_df = pd.read_parquet(product_collection_path)
     name_sentences = product_collection_sm_df['name'].to_list()
-    product_embeddings = model.encode(
-        sentences=name_sentences,
-        batch_size=batch_size,
-        normalize_embeddings=True,
-        show_progress_bar=True,
-    )
+    if config.use_amp:
+        from torch.cuda.amp import autocast
+        with autocast():
+            product_embeddings = model.encode(
+                sentences=name_sentences,
+                batch_size=batch_size,
+                normalize_embeddings=True,
+                show_progress_bar=True,
+            )
+    else:
+        product_embeddings = model.encode(
+            sentences=name_sentences,
+            batch_size=batch_size,
+            normalize_embeddings=True,
+            show_progress_bar=True,
+        )
 
     # get query result lists
     scores = np.dot(query_embeddings, product_embeddings.T)
@@ -139,16 +158,28 @@ def evaluate(test_query_path, product_collection_path, qrels_path, test_collecti
 
 if __name__ == '__main__':
     # evaluate on different testing set
-    test_collection = ['round0-plus', 'round1']
-
-    for test_collection_name in test_collection:
-        if test_collection_name == 'round0-plus':
-            test_query_path=config.round0_plus_test_query_path
-            product_collection_path=config.round0_plus_product_collection_sm_path
-            qrels_path=config.round0_plus_qrels_path
-        elif test_collection_name == 'round1':
-            test_query_path=config.round1_test_query_path
-            product_collection_path=config.round1_product_collection_sm_path
-            qrels_path=config.round1_qrels_path
-        print("evaluate on test collection - {}".format(test_collection_name))
-        evaluate(test_query_path, product_collection_path, qrels_path, test_collection_name)
+    # test_collection = ['round0-plus', 'round1']
+    test_collection = []
+    
+    if len(test_collection) == 0:
+        test_query_path=config.test_query_path
+        product_collection_path=config.test_product_collection_path
+        qrels_path=config.test_qrels_path
+        print("evaluate on test collection - {}".format('[config]]'))
+        evaluate(test_query_path, product_collection_path, qrels_path, '[config]')
+    else:
+        for test_collection_name in test_collection:
+            if test_collection_name == 'round0-plus':
+                test_query_path=config.round0_plus_test_query_path
+                product_collection_path=config.round0_plus_product_collection_sm_path
+                qrels_path=config.round0_plus_qrels_path
+            elif test_collection_name == 'round1':
+                test_query_path=config.round1_test_query_path
+                product_collection_path=config.round1_product_collection_sm_path
+                qrels_path=config.round1_qrels_path
+            elif test_collection_name == 'ruten':
+                test_query_path=config.ruten_test_query_path
+                product_collection_path=config.ruten_product_collection_sm_path
+                qrels_path=config.ruten_qrels_path
+            print("evaluate on test collection - {}".format(test_collection_name))
+            evaluate(test_query_path, product_collection_path, qrels_path, test_collection_name)
