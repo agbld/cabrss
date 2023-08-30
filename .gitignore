@@ -1,7 +1,8 @@
 # ---------- custom ----------
 # ignore experiments folder
-experiments/
+Experiments/
 legacy/
+screenlog.0
 
 
 # ---------- default ----------

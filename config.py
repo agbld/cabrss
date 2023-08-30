@@ -13,7 +13,8 @@ device = 'cuda:0'
 
 # select machine by uncomment the corresponding line
 # machine = 'agbld.host.container.cabrss'
-machine = 'agbld.host'
+# machine = 'agbld.host'
+machine = 'agbld.RTX3090'
 # machine = 'your.machine.name'
 
 # register your machine here
@@ -31,6 +32,11 @@ if machine == 'paperspace.A100':
     ruten_datasets_folder = '/mnt/share_disk/Datasets/Ruten/'
     experiments_folder = './Experiments/'
     pretrained_models_folder = '/mnt/share_disk/Models/ICL/pretrained_models/'
+if machine == 'agbld.RTX3090':
+    # pchome_datasets_folder = 'E:/share_disk/Datasets/PChome_datasets/'
+    ruten_datasets_folder = '/home/ee303/Documents/agbld/Datasets/Ruten'
+    experiments_folder = './Experiments/'
+    pretrained_models_folder = '/home/ee303/Documents/agbld/Models/pretrained_models/'
 if machine == 'your.machine.name':
     pchome_datasets_folder = '/path/to/pchome/datasets/'
     experiments_folder = '/path/to/experiments/'
@@ -68,7 +74,7 @@ ruten_qrels_path = os.path.join(ruten_datasets_folder, 'small_dataset', 'qrels.p
 # exp_name = 'exp11_ECom-BERT_xbm_batch-hard-loss_train-sm_intent-based-book-neg-2_valid-on-round0-plus'
 # exp_name = 'ruten-adaption-from-ecom-bert'
 exp_name = 'ruten-adaption-from-ckip-bert'
-is_test_run = True
+is_test_run = False
 
 if exp_name == 'exp11_ECom-BERT_xbm_batch-hard-loss_train-sm_intent-based-book-neg-2_valid-on-round0-plus':
     # TRAIN DATASET
@@ -204,7 +210,7 @@ if exp_name == 'ruten-adaption-from-ckip-bert':
 
     if is_test_run:
         exp_name += '_test'
-        query_item_pairs_path = trace_log_tiny_path
+        query_item_pairs_path = trace_log_sm_path
         mining_neg_result_folder = os.path.join(experiments_folder, exp_name, 
                                                 'mining_neg_result', 
                                                 f'{offline_mining_strategy["mine-neg-strategy"]}_neg_num_{offline_mining_strategy["neg-num"]}')
